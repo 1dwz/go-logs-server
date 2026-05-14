@@ -1,42 +1,7 @@
 ```
-# Go binaries
-*.exe
-*.dll
-*.so
-*.a
-*.o
-*.out
+# CI/CD
+.github/workflows/
 
-# Go build artifacts
-bin/
-_dist/
-_output/
-
-# Dependencies
-vendor/
-
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-
-# Environment
-.env
-.env.local
-.env.*
-
-# Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# OS generated files
-.DS_Store
-Thumbs.db
+# Documentation
+RELEASE_GUIDE.md
 ```
