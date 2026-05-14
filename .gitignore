@@ -1,12 +1,42 @@
-# 日志文件夹
-logs/
-
-# 以点开头的隐藏文件夹
-.trae/
-.vscode/
-
-# 编译生成的可执行文件
+```
+# Go binaries
 *.exe
+*.dll
+*.so
+*.a
+*.o
+*.out
 
-# Go 相关
-go.sum
+# Go build artifacts
+bin/
+_dist/
+_output/
+
+# Dependencies
+vendor/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# OS generated files
+.DS_Store
+Thumbs.db
+```

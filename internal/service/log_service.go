@@ -13,7 +13,7 @@ import (
 )
 
 type LogService struct {
-	storage  *storage.FileStorage
+	storage  *storage.MemoryStorage
 	logQueue chan model.LogEntry
 	config   *config.Config
 
@@ -24,7 +24,7 @@ type LogService struct {
 	doneCh chan struct{}
 }
 
-func NewLogService(cfg *config.Config, stor *storage.FileStorage) *LogService {
+func NewLogService(cfg *config.Config, stor *storage.MemoryStorage) *LogService {
 	svc := &LogService{
 		storage:  stor,
 		logQueue: make(chan model.LogEntry, cfg.Buffer.QueueSize),
