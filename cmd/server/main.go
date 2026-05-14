@@ -26,7 +26,7 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	store, err := storage.NewFileStorage(cfg)
+	store, err := storage.NewMemoryStorage(cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
@@ -63,7 +63,7 @@ func main() {
 	log.Printf("Web 界面地址: http://localhost:%d/", cfg.Server.Port)
 	log.Printf("API 地址: http://localhost:%d/api", cfg.Server.Port)
 	log.Printf("日志写入地址: POST http://localhost:%d/log", cfg.Server.Port)
-	log.Printf("日志持久化文件: %s", cfg.Storage.LogDir)
+	log.Printf("日志持久化文件: %s")
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

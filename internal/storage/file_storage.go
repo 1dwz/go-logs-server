@@ -1,12 +1,6 @@
 package storage
 
 import (
-	"bufio"
-	"encoding/json"
-	"errors"
-	"io"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -16,84 +10,30 @@ import (
 	"log-server/internal/model"
 )
 
-const currentLogFileName = "current.jsonl"
-
-type FileStorage struct {
+type MemoryStorage struct {
 	config  *config.Config
 	logs    []model.LogEntry
 	logsMap map[string]model.LogEntry
 	mu      sync.RWMutex
 	maxLogs int64
-
-	logFile *os.File
-	writer  *bufio.Writer
 }
 
-func NewFileStorage(cfg *config.Config) (*FileStorage, error) {
-	if err := os.MkdirAll(cfg.Storage.LogDir, 0755); err != nil {
-		return nil, err
-	}
-
-	filePath := filepath.Join(cfg.Storage.LogDir, currentLogFileName)
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
-	if err != nil {
-		return nil, err
-	}
-
-	store := &FileStorage{
+func NewMemoryStorage(cfg *config.Config) (*MemoryStorage, error) {
+	store := &MemoryStorage{
 		config:  cfg,
 		logs:    make([]model.LogEntry, 0, cfg.Buffer.QueueSize),
 		logsMap: make(map[string]model.LogEntry),
 		maxLogs: int64(cfg.Buffer.QueueSize),
-		logFile: file,
-		writer:  bufio.NewWriter(file),
-	}
-
-	if err := store.loadFromFile(filePath); err != nil {
-		_ = file.Close()
-		return nil, err
 	}
 
 	return store, nil
 }
 
-func (s *FileStorage) loadFromFile(filePath string) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil
-		}
-		return err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	buffer := make([]byte, 64*1024)
-	scanner.Buffer(buffer, 10*1024*1024)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
-			continue
-		}
-
-		var entry model.LogEntry
-		if err := json.Unmarshal([]byte(line), &entry); err != nil {
-			continue
-		}
-		s.appendMemory(entry)
-	}
-
-	if err := scanner.Err(); err != nil && !errors.Is(err, io.EOF) {
-		return err
-	}
-	return nil
-}
-
-func (s *FileStorage) Write(entry model.LogEntry) error {
+func (s *MemoryStorage) Write(entry model.LogEntry) error {
 	return s.WriteBatch([]model.LogEntry{entry})
 }
 
-func (s *FileStorage) WriteBatch(entries []model.LogEntry) error {
+func (s *MemoryStorage) WriteBatch(entries []model.LogEntry) error {
 	if len(entries) == 0 {
 		return nil
 	}
@@ -103,29 +43,18 @@ func (s *FileStorage) WriteBatch(entries []model.LogEntry) error {
 
 	for _, entry := range entries {
 		s.appendMemory(entry)
-
-		data, err := json.Marshal(entry)
-		if err != nil {
-			return err
-		}
-		if _, err := s.writer.Write(data); err != nil {
-			return err
-		}
-		if err := s.writer.WriteByte('\n'); err != nil {
-			return err
-		}
 	}
 
-	return s.writer.Flush()
+	return nil
 }
 
-func (s *FileStorage) appendMemory(entry model.LogEntry) {
+func (s *MemoryStorage) appendMemory(entry model.LogEntry) {
 	s.checkAndEvict()
 	s.logs = append(s.logs, entry)
 	s.logsMap[entry.ID] = entry
 }
 
-func (s *FileStorage) checkAndEvict() {
+func (s *MemoryStorage) checkAndEvict() {
 	if int64(len(s.logs)) < s.maxLogs {
 		return
 	}
@@ -145,7 +74,7 @@ func (s *FileStorage) checkAndEvict() {
 	}
 }
 
-func (s *FileStorage) Query(filter model.LogFilter) (*model.LogListResponse, error) {
+func (s *MemoryStorage) Query(filter model.LogFilter) (*model.LogListResponse, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -193,7 +122,7 @@ func (s *FileStorage) Query(filter model.LogFilter) (*model.LogListResponse, err
 	}, nil
 }
 
-func (s *FileStorage) matchFilter(entry model.LogEntry, filter model.LogFilter) bool {
+func (s *MemoryStorage) matchFilter(entry model.LogEntry, filter model.LogFilter) bool {
 	if filter.TitleProvided && entry.Title != filter.Title {
 		return false
 	}
@@ -263,7 +192,7 @@ func equalFold(s, t string) bool {
 	return true
 }
 
-func (s *FileStorage) GetTitles() (*model.TitleListResponse, error) {
+func (s *MemoryStorage) GetTitles() (*model.TitleListResponse, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -320,7 +249,7 @@ func (s *FileStorage) GetTitles() (*model.TitleListResponse, error) {
 	}, nil
 }
 
-func (s *FileStorage) GetStats() (*model.StatsResponse, error) {
+func (s *MemoryStorage) GetStats() (*model.StatsResponse, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -347,7 +276,7 @@ func (s *FileStorage) GetStats() (*model.StatsResponse, error) {
 	return stats, nil
 }
 
-func (s *FileStorage) GetRecentLogs(count int) []model.LogEntry {
+func (s *MemoryStorage) GetRecentLogs(count int) []model.LogEntry {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -363,7 +292,7 @@ func (s *FileStorage) GetRecentLogs(count int) []model.LogEntry {
 	return result
 }
 
-func (s *FileStorage) ExportLogs(title string, filter model.LogFilter) ([]model.LogEntry, error) {
+func (s *MemoryStorage) ExportLogs(title string, filter model.LogFilter) ([]model.LogEntry, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -383,7 +312,7 @@ func (s *FileStorage) ExportLogs(title string, filter model.LogFilter) ([]model.
 	return logs, nil
 }
 
-func (s *FileStorage) GetTags(title string) ([]string, error) {
+func (s *MemoryStorage) GetTags(title string) ([]string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -407,28 +336,18 @@ func (s *FileStorage) GetTags(title string) ([]string, error) {
 	return tags, nil
 }
 
-func (s *FileStorage) Close() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.writer != nil {
-		if err := s.writer.Flush(); err != nil {
-			return err
-		}
-	}
-	if s.logFile != nil {
-		return s.logFile.Close()
-	}
+func (s *MemoryStorage) Close() error {
+	// 内存存储无需关闭，直接返回 nil
 	return nil
 }
 
-func (s *FileStorage) GetLogCount() int64 {
+func (s *MemoryStorage) GetLogCount() int64 {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return int64(len(s.logs))
 }
 
-func (s *FileStorage) ClearLogs(title string) error {
+func (s *MemoryStorage) ClearLogs(title string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -441,73 +360,6 @@ func (s *FileStorage) ClearLogs(title string) error {
 		}
 	}
 	s.logs = remaining
-
-	if err := s.writer.Flush(); err != nil {
-		return err
-	}
-
-	tmpPath := s.logFile.Name() + ".tmp"
-	tmpFile, err := os.Create(tmpPath)
-	if err != nil {
-		return err
-	}
-	tmpWriter := bufio.NewWriter(tmpFile)
-	for _, entry := range s.logs {
-		data, err := json.Marshal(entry)
-		if err != nil {
-			tmpFile.Close()
-			os.Remove(tmpPath)
-			return err
-		}
-		if _, err := tmpWriter.Write(data); err != nil {
-			tmpFile.Close()
-			os.Remove(tmpPath)
-			return err
-		}
-		if err := tmpWriter.WriteByte('\n'); err != nil {
-			tmpFile.Close()
-			os.Remove(tmpPath)
-			return err
-		}
-	}
-	if err := tmpWriter.Flush(); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
-		return err
-	}
-	tmpFile.Close()
-
-	s.writer.Flush()
-	s.logFile.Close()
-
-	if err := os.Rename(tmpPath, s.logFile.Name()); err != nil {
-		newFile, err := os.OpenFile(s.logFile.Name(), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
-		if err != nil {
-			return err
-		}
-		s.logFile = newFile
-		s.writer = bufio.NewWriter(newFile)
-		for _, entry := range s.logs {
-			data, err := json.Marshal(entry)
-			if err != nil {
-				return err
-			}
-			if _, err := s.writer.Write(data); err != nil {
-				return err
-			}
-			if err := s.writer.WriteByte('\n'); err != nil {
-				return err
-			}
-		}
-		return s.writer.Flush()
-	}
-
-	newFile, err := os.OpenFile(s.logFile.Name(), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
-	if err != nil {
-		return err
-	}
-	s.logFile = newFile
-	s.writer = bufio.NewWriter(newFile)
 
 	return nil
 }
