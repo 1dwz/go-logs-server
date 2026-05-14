@@ -1,7 +1,19 @@
-```
 # CI/CD
 .github/workflows/
 
 # Documentation
 RELEASE_GUIDE.md
-```
+
+# 编译生成的可执行文件
+logs-server.exe
+*.exe
+
+# 日志文件夹
+logs/
+
+# 以点开头的隐藏文件夹
+.trae/
+.vscode/
+
+# Go 相关
+go.sum
