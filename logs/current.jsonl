@@ -1,0 +1,4 @@
+{"id":"4a5996c6-e680-46d3-86ba-42f2906c99b0","title":"My Script Logs","level":"info","tag":"init","message":"This is an info message\nxxxxx","timestamp":"2026-05-14T16:29:06.4684938+08:00"}
+{"id":"34741449-64d1-4c91-b615-4912ab6447de","title":"My Script Logs","level":"warn","tag":"init","message":"This is a warning message","timestamp":"2026-05-14T16:29:06.5193672+08:00"}
+{"id":"4c93c574-5553-42b5-8a77-5bf8052a14b9","title":"My Script Logs","level":"error","tag":"init","message":"This is an error message","timestamp":"2026-05-14T16:29:06.5802928+08:00"}
+{"id":"cb91e2b9-f613-454a-9d6a-2ca21b0b1d86","title":"My Script Logs","level":"debug","tag":"init","message":"This is a debug message","timestamp":"2026-05-14T16:29:06.6314775+08:00"}

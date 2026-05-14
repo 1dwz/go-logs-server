@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日志服务器</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+    <main class="page">
+        <header class="header">
+            <div>
+                <h1>日志服务器</h1>
+                <p class="subtitle">点击标题查看日志详情</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">标题数</div>
+                <div class="stat-value" id="totalCount">-</div>
+            </div>
+        </header>
+
+        <section id="titleList" class="grid">
+            <div class="loading">加载中...</div>
+        </section>
+    </main>
+    <script src="/static/home.js"></script>
+</body>
+</html>

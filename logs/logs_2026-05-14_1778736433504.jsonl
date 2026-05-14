@@ -1,0 +1,4 @@
+{"id":"5f03096e-88dc-42de-b442-bdee68d21655","title":"MyApp","level":"info","tag":"init","message":"Application started successfully","timestamp":"2026-05-14T13:28:43.3158382+08:00"}
+{"id":"aed5531a-d53b-439b-814f-b22c7ac0fce5","title":"MyApp","level":"warn","tag":"memory","message":"Memory usage is at 80%","timestamp":"2026-05-14T13:28:43.335855+08:00"}
+{"id":"d99e3c2c-1bed-4bec-a66c-d88ec6c80391","title":"MyApp","level":"error","tag":"database","message":"Database connection timeout","timestamp":"2026-05-14T13:28:43.3573692+08:00"}
+{"id":"b16d8b09-7797-433d-97ac-e7b26f181ef0","title":"MyApp","level":"debug","tag":"debug","message":"Debug information here","timestamp":"2026-05-14T13:28:43.3785096+08:00"}
